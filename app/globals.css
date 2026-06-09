@@ -14,7 +14,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: #05060a;
     --foreground: #ededed;
   }
 }
@@ -23,4 +23,354 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
+}
+
+/* ===== HERO 3D CUBE ===== */
+
+.hero-cube-container {
+  perspective: 1400px;
+
+  width: 550px;
+  height: 550px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 9999px;
+
+  background:
+    radial-gradient(circle at center,
+      rgba(168, 85, 247, 0.12) 0%,
+      rgba(168, 85, 247, 0.06) 35%,
+      rgba(168, 85, 247, 0.02) 60%,
+      transparent 100%);
+
+  backdrop-filter: blur(30px);
+}
+
+.hero-cube {
+  position: relative;
+
+  width: 220px;
+  height: 220px;
+
+  transform-style: preserve-3d;
+
+  transition: transform 0.12s ease-out;
+
+  will-change: transform;
+}
+
+.cube-face {
+  position: absolute;
+
+  width: 220px;
+  height: 220px;
+
+  border-radius: 32px;
+
+  border: 1px solid rgba(168, 85, 247, 0.25);
+
+  backdrop-filter: blur(18px);
+
+  box-shadow:
+    0 0 80px rgba(168, 85, 247, 0.18),
+    inset 0 0 30px rgba(255, 255, 255, 0.05);
+}
+
+.cube-front {
+  transform: translateZ(110px);
+
+  background: linear-gradient(135deg,
+      #3b82f6,
+      #8b5cf6,
+      #ec4899);
+}
+
+.cube-back {
+  transform: rotateY(180deg) translateZ(110px);
+
+  background: rgba(139, 92, 246, 0.18);
+}
+
+.cube-right {
+  transform: rotateY(90deg) translateZ(110px);
+
+  background: rgba(59, 130, 246, 0.18);
+}
+
+.cube-left {
+  transform: rotateY(-90deg) translateZ(110px);
+
+  background: rgba(236, 72, 153, 0.18);
+}
+
+.cube-top {
+  transform: rotateX(90deg) translateZ(110px);
+
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.cube-bottom {
+  transform: rotateX(-90deg) translateZ(110px);
+
+  background: rgba(0, 0, 0, 0.12);
+}
+
+/* Дополнительное свечение */
+
+.hero-cube::before {
+  content: "";
+
+  position: absolute;
+
+  inset: -60px;
+
+  background: radial-gradient(circle,
+      rgba(168, 85, 247, 0.25),
+      transparent 70%);
+
+  filter: blur(50px);
+
+  transform: translateZ(-50px);
+
+  pointer-events: none;
+}
+
+/* ================================================= */
+/* AUTH PAGES EFFECTS */
+/* ================================================= */
+
+.auth-glow {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.auth-glow::before {
+  content: "";
+
+  position: absolute;
+
+  width: 700px;
+  height: 700px;
+
+  left: 50%;
+  top: 50%;
+
+  transform: translate(-50%, -50%);
+
+  background:
+    radial-gradient(circle,
+      rgba(139, 92, 246, 0.22),
+      rgba(59, 130, 246, 0.12),
+      transparent 70%);
+
+  filter: blur(100px);
+
+  animation: authGlowPulse 8s ease-in-out infinite;
+}
+
+@keyframes authGlowPulse {
+
+  0%,
+  100% {
+    transform:
+      translate(-50%, -50%) scale(1);
+  }
+
+  50% {
+    transform:
+      translate(-50%, -50%) scale(1.15);
+  }
+}
+
+/* ================================================= */
+/* FLOATING CARD */
+/* ================================================= */
+
+.floating-card {
+  animation: floatCard 6s ease-in-out infinite;
+}
+
+@keyframes floatCard {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-18px);
+  }
+}
+
+/* ================================================= */
+/* ORBIT RINGS */
+/* ================================================= */
+
+.orbit-ring {
+  position: absolute;
+
+  border-radius: 9999px;
+
+  border: 1px solid rgba(139, 92, 246, 0.12);
+
+  pointer-events: none;
+}
+
+.orbit-ring-1 {
+  width: 260px;
+  height: 260px;
+
+  animation: orbitRotate 18s linear infinite;
+}
+
+.orbit-ring-2 {
+  width: 360px;
+  height: 360px;
+
+  animation: orbitRotate 28s linear infinite reverse;
+}
+
+.orbit-ring-3 {
+  width: 500px;
+  height: 500px;
+
+  animation: orbitRotate 40s linear infinite;
+}
+
+@keyframes orbitRotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ================================================= */
+/* STARS */
+/* ================================================= */
+
+.stars-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.stars-bg span {
+  position: absolute;
+
+  width: 3px;
+  height: 3px;
+
+  border-radius: 999px;
+
+  background: white;
+
+  opacity: .6;
+
+  animation: starBlink 3s ease-in-out infinite;
+}
+
+@keyframes starBlink {
+
+  0%,
+  100% {
+    opacity: .2;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ================================================= */
+/* NEON PANEL */
+/* ================================================= */
+
+.auth-panel {
+  background:
+    linear-gradient(180deg,
+      rgba(255, 255, 255, 0.03),
+      rgba(255, 255, 255, 0.01));
+
+  border: 1px solid rgba(139, 92, 246, .15);
+
+  backdrop-filter: blur(20px);
+
+  box-shadow:
+    0 0 60px rgba(139, 92, 246, .08),
+    inset 0 0 40px rgba(255, 255, 255, .02);
+}
+
+/* ================================================= */
+/* GRADIENT BUTTON */
+/* ================================================= */
+
+.auth-btn {
+  background:
+    linear-gradient(90deg,
+      #3b82f6,
+      #8b5cf6,
+      #d946ef);
+
+  transition: all .25s ease;
+}
+
+.auth-btn:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 0 30px rgba(139, 92, 246, .45);
+}
+
+@keyframes cubeRotate {
+  0% {
+    transform: rotateX(-20deg) rotateY(0deg);
+  }
+
+  100% {
+    transform: rotateX(-20deg) rotateY(360deg);
+  }
+}
+
+/* ===================================== */
+/* ANIMATED BACKGROUND */
+/* ===================================== */
+
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+
+  33% {
+    transform: translate(60px, -80px) scale(1.15);
+  }
+
+  66% {
+    transform: translate(-50px, 40px) scale(0.9);
+  }
+
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 15s ease-in-out infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
 }
