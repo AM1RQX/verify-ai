@@ -2,14 +2,16 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 
 type AnalysisItem = {
-    date: string;
-    ai: number;
-    human: number;
+    created_at: string;
+    ai_probability: number;
+    human_probability: number;
 };
 
 export default function AnalyzePage() {
+    const [user, setUser] = useState<any>(null);
     const [image, setImage] = useState<string | null>(null);
     const [base64, setBase64] = useState("");
     const [loading, setLoading] = useState(false);
@@ -22,47 +24,60 @@ export default function AnalyzePage() {
     const [analysesToday, setAnalysesToday] = useState(0);
 
     useEffect(() => {
-        const saved = localStorage.getItem("analysis-history");
+        async function loadData() {
+            const {
+                data: { user },
+            } = await supabase.auth.getUser();
 
-        if (saved) {
-            try {
-                setHistory(JSON.parse(saved));
-            } catch {
-                localStorage.removeItem("analysis-history");
+            console.log("CURRENT USER:", user);
+
+            if (!user) {
+                return;
+            }
+            setUser(user);
+
+            // Fetch history
+            const { data: analyses } = await supabase
+                .from("analyses")
+                .select("ai_probability, human_probability, created_at")
+                .eq("user_id", user.id)
+                .order("created_at", { ascending: false })
+                .limit(10);
+
+            if (analyses) {
+                setHistory(analyses);
+            }
+
+            // Fetch usage limits
+            const today = new Date().toISOString().split("T")[0];
+            const { data: usageData } = await supabase
+                .from("usage_limits")
+                .select("*")
+                .eq("user_id", user.id)
+                .single();
+
+            if (usageData) {
+                if (usageData.last_reset !== today) {
+                    await supabase
+                        .from("usage_limits")
+                        .update({ scans_today: 0, last_reset: today })
+                        .eq("user_id", user.id);
+                    setAnalysesToday(0);
+                } else {
+                    setAnalysesToday(usageData.scans_today);
+                }
+            } else {
+                await supabase
+                    .from("usage_limits")
+                    .insert({ user_id: user.id, scans_today: 0, last_reset: today });
+                setAnalysesToday(0);
             }
         }
 
-        const today = new Date().toDateString();
-
-        const savedCount =
-            localStorage.getItem("analysis-count");
-
-        const savedDate =
-            localStorage.getItem("analysis-date");
-
-        if (savedDate === today) {
-            setAnalysesToday(
-                Number(savedCount || 0)
-            );
-        } else {
-            localStorage.setItem(
-                "analysis-date",
-                today
-            );
-
-            localStorage.setItem(
-                "analysis-count",
-                "0"
-            );
-
-            setAnalysesToday(0);
-        }
-
+        loadData();
     }, []);
 
-    function handleImageUpload(
-        e: React.ChangeEvent<HTMLInputElement>
-    ) {
+    function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
 
         console.log("FILE:", file);
@@ -94,6 +109,10 @@ export default function AnalyzePage() {
     }
 
     async function handleAnalyze() {
+        if (!user) {
+            alert("Please sign in to analyze images");
+            return;
+        }
         if (analysesToday >= 10) {
             alert("You reached the daily limit (10 analyses)");
             return;
@@ -116,6 +135,7 @@ export default function AnalyzePage() {
                 }),
             });
 
+            alert("NEW BUILD LOADED");
             const result = await response.json();
 
             console.log("HF RESULT:", result);
@@ -125,23 +145,14 @@ export default function AnalyzePage() {
 
             if (Array.isArray(result)) {
                 ai = Math.round(
-                    (result.find(
-                        (item: any) =>
-                            item.label === "artificial"
-                    )?.score || 0) * 100
+                    (result.find((item: any) => item.label === "artificial")?.score || 0) * 100
                 );
 
                 human = Math.round(
-                    (result.find(
-                        (item: any) =>
-                            item.label === "human"
-                    )?.score || 0) * 100
+                    (result.find((item: any) => item.label === "human")?.score || 0) * 100
                 );
             } else {
-                const score =
-                    result?.[0]?.score ||
-                    result?.score ||
-                    0.5;
+                const score = result?.[0]?.score || result?.score || 0.5;
 
                 ai = Math.round(score * 100);
                 human = 100 - ai;
@@ -151,35 +162,46 @@ export default function AnalyzePage() {
             setHumanProbability(human);
             setConfidence(Math.max(ai, human));
 
-            const newAnalysis: AnalysisItem = {
-                date: new Date().toLocaleString(),
-                ai,
-                human,
-            };
+            // Save to Supabase
+            const { data: newAnalysis, error: analysisError } = await supabase
+                .from("analyses")
+                .insert({
+                    user_id: user.id,
+                    ai_probability: ai,
+                    human_probability: human,
+                })
+                .select()
+                .single();
 
-            const updatedHistory = [
+            console.log("ANALYSIS INSERT:", {
                 newAnalysis,
-                ...history,
-            ].slice(0, 10);
+                analysisError,
+            });
 
-            setHistory(updatedHistory);
+            if (newAnalysis) {
+                setHistory((prev) => [newAnalysis, ...prev].slice(0, 10));
+            }
+
             const newCount = analysesToday + 1;
-
             setAnalysesToday(newCount);
 
-            localStorage.setItem(
-                "analysis-count",
-                String(newCount)
-            );
+            const { error: usageError } = await supabase
+                .from("usage_limits")
+                .update({ scans_today: newCount })
+                .eq("user_id", user.id);
 
-            localStorage.setItem(
-                "analysis-history",
-                JSON.stringify(updatedHistory)
-            );
+            console.log("USAGE UPDATE:", {
+                usageError,
+            });
 
-        } catch (error) {
-            console.error(error);
-            alert("Ошибка анализа");
+        } catch (error: any) {
+            console.error("ANALYZE ERROR:", error);
+
+            if (error?.message) {
+                alert(error.message);
+            } else {
+                alert(JSON.stringify(error));
+            }
         } finally {
             setLoading(false);
         }
@@ -212,12 +234,8 @@ export default function AnalyzePage() {
             </div>
 
             <div className="relative z-10 max-w-7xl mx-auto p-8">
-
-
                 <div className="mb-10">
-                    <h1 className="text-6xl font-bold">
-                        Analyze Image
-                    </h1>
+                    <h1 className="text-6xl font-bold">Analyze Image</h1>
 
                     <p className="mt-3 text-white/50">
                         Upload an image and detect AI-generated content instantly.
@@ -225,26 +243,15 @@ export default function AnalyzePage() {
                 </div>
 
                 <div className="grid lg:grid-cols-2 gap-8">
-
                     <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-8">
-
-                        <h2 className="text-2xl font-bold mb-6">
-                            Upload Image
-                        </h2>
+                        <h2 className="text-2xl font-bold mb-6">Upload Image</h2>
 
                         <label className="flex flex-col items-center justify-center h-[350px] rounded-3xl border-2 border-dashed border-purple-500/30 bg-white/[0.02] cursor-pointer hover:border-purple-500 transition">
+                            <span className="text-6xl mb-4">📤</span>
 
-                            <span className="text-6xl mb-4">
-                                📤
-                            </span>
+                            <span className="text-xl">Drag & Drop Image</span>
 
-                            <span className="text-xl">
-                                Drag & Drop Image
-                            </span>
-
-                            <span className="text-white/50 mt-2">
-                                PNG, JPG, WEBP
-                            </span>
+                            <span className="text-white/50 mt-2">PNG, JPG, WEBP</span>
 
                             <input
                                 type="file"
@@ -256,26 +263,24 @@ export default function AnalyzePage() {
 
                         <button
                             onClick={handleAnalyze}
-                            disabled={loading || analysesToday >= 10}
+                            disabled={loading || analysesToday >= 10 || !user}
                             className="mt-6 w-full py-4 rounded-2xl bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 font-semibold hover:scale-[1.02] transition disabled:opacity-50"
                         >
                             {loading
                                 ? "Analyzing..."
+                                : !user
+                                ? "Sign In to Analyze"
                                 : analysesToday >= 10
-                                    ? "Daily Limit Reached"
-                                    : "Analyze Image"}
+                                ? "Daily Limit Reached"
+                                : "Analyze Image"}
                         </button>
                         <p className="mt-3 text-center text-white/60">
                             {analysesToday}/10 analyses used today
                         </p>
-
                     </div>
 
                     <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-8">
-
-                        <h2 className="text-2xl font-bold mb-6">
-                            Preview
-                        </h2>
+                        <h2 className="text-2xl font-bold mb-6">Preview</h2>
 
                         {image ? (
                             <img
@@ -288,58 +293,38 @@ export default function AnalyzePage() {
                                 No image selected
                             </div>
                         )}
-
                     </div>
-
                 </div>
-
             </div>
 
             <div className="grid lg:grid-cols-3 gap-6 mt-8">
-
                 <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
                     <div className="text-green-400 text-5xl font-bold">
-                        {confidence !== null
-                            ? `${confidence}%`
-                            : "--"}
+                        {confidence !== null ? `${confidence}%` : "--"}
                     </div>
 
-                    <div className="text-white/50 mt-2">
-                        Confidence Score
-                    </div>
+                    <div className="text-white/50 mt-2">Confidence Score</div>
                 </div>
 
                 <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
                     <div className="text-pink-400 text-5xl font-bold">
-                        {aiProbability !== null
-                            ? `${aiProbability}%`
-                            : "--"}
+                        {aiProbability !== null ? `${aiProbability}%` : "--"}
                     </div>
 
-                    <div className="text-white/50 mt-2">
-                        AI Probability
-                    </div>
+                    <div className="text-white/50 mt-2">AI Probability</div>
                 </div>
 
                 <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
                     <div className="text-blue-400 text-5xl font-bold">
-                        {humanProbability !== null
-                            ? `${humanProbability}%`
-                            : "--"}
+                        {humanProbability !== null ? `${humanProbability}%` : "--"}
                     </div>
 
-                    <div className="text-white/50 mt-2">
-                        Human Probability
-                    </div>
+                    <div className="text-white/50 mt-2">Human Probability</div>
                 </div>
-
             </div>
 
             <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-8">
-
-                <h2 className="text-3xl font-bold mb-6">
-                    Recent Analyses
-                </h2>
+                <h2 className="text-3xl font-bold mb-6">Recent Analyses</h2>
 
                 {history.length === 0 ? (
                     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
@@ -352,23 +337,18 @@ export default function AnalyzePage() {
                                 key={index}
                                 className="rounded-2xl border border-white/10 bg-white/[0.03] p-5"
                             >
-                                <div className="font-semibold">
-                                    AI: {item.ai}%
-                                </div>
+                                <div className="font-semibold">AI: {item.ai_probability}%</div>
 
-                                <div className="text-white/60">
-                                    Human: {item.human}%
-                                </div>
+                                <div className="text-white/60">Human: {item.human_probability}%</div>
 
                                 <div className="text-white/40 text-sm mt-2">
-                                    {item.date}
+                                    {new Date(item.created_at).toLocaleString()}
                                 </div>
                             </div>
                         ))}
                     </div>
                 )}
-
             </div>
-        </main >
+        </main>
     );
 }
