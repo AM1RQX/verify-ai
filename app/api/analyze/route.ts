@@ -5,7 +5,7 @@ export async function POST(req: Request) {
         const { image } = await req.json();
 
         const response = await fetch(
-            "https://router.huggingface.co/hf-inference/models/umm-maybe/AI-image-detector",
+            "https://router.huggingface.co/hf-inference/models/Nahrawy/AIorNot",
             {
                 method: "POST",
                 headers: {
@@ -22,6 +22,26 @@ export async function POST(req: Request) {
 
         console.log("HF RESPONSE:");
         console.log(result);
+
+        if (Array.isArray(result)) {
+            const mappedResult = result.map((item: any) => {
+                let mappedLabel = item.label;
+                const labelLower = item.label.toLowerCase();
+                
+                if (labelLower.includes("ai") || labelLower.includes("fake")) {
+                    mappedLabel = "artificial";
+                } else if (labelLower.includes("real") || labelLower.includes("human")) {
+                    mappedLabel = "human";
+                }
+
+                return {
+                    ...item,
+                    label: mappedLabel
+                };
+            });
+            
+            return NextResponse.json(mappedResult);
+        }
 
         return NextResponse.json(result);
     } catch (error) {
