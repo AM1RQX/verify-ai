@@ -121,7 +121,10 @@ export default function SignInPage() {
                                 <label className="text-xs font-bold uppercase tracking-widest text-zinc-500">
                                     Password
                                 </label>
-                                <Link href="#" className="text-[10px] font-bold uppercase tracking-tighter text-zinc-600 hover:text-indigo-400 transition-colors">
+                                <Link
+                                    href="/forgot-password"
+                                    className="text-[10px] font-bold uppercase tracking-tighter text-zinc-600 hover:text-indigo-400 transition-colors"
+                                >
                                     Forgot?
                                 </Link>
                             </div>
