@@ -135,7 +135,6 @@ export default function AnalyzePage() {
                 }),
             });
 
-            alert("NEW BUILD LOADED");
             const result = await response.json();
 
             console.log("HF RESULT:", result);
@@ -269,10 +268,10 @@ export default function AnalyzePage() {
                             {loading
                                 ? "Analyzing..."
                                 : !user
-                                ? "Sign In to Analyze"
-                                : analysesToday >= 10
-                                ? "Daily Limit Reached"
-                                : "Analyze Image"}
+                                    ? "Sign In to Analyze"
+                                    : analysesToday >= 10
+                                        ? "Daily Limit Reached"
+                                        : "Analyze Image"}
                         </button>
                         <p className="mt-3 text-center text-white/60">
                             {analysesToday}/10 analyses used today
