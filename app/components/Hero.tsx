@@ -156,34 +156,19 @@ export default function Hero() {
                         ) : (
                             <>
                                 <Link
-                                    href="/signup"
+                                    href="/analyze"
                                     className="
-                px-7
-                py-4
-                rounded-xl
-                bg-gradient-to-r
-                from-blue-500
-                to-purple-600
-                hover:scale-105
-                transition
-                "
+    px-7
+    py-4
+    rounded-xl
+    bg-gradient-to-r
+    from-blue-500
+    to-purple-600
+    hover:scale-105
+    transition
+    "
                                 >
-                                    Get Started Free
-                                </Link>
-
-                                <Link
-                                    href="/signin"
-                                    className="
-                px-7
-                py-4
-                rounded-xl
-                border
-                border-white/20
-                hover:bg-white/5
-                transition
-                "
-                                >
-                                    Sign In
+                                    Analyze Now
                                 </Link>
                             </>
                         )}

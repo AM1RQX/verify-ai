@@ -20,10 +20,7 @@ export default function Navbar() {
             "
         >
             {/* Logo */}
-            <Link
-                href="/"
-                className="flex items-center"
-            >
+            <Link href="/" className="flex items-center">
                 <span className="text-4xl font-black text-purple-500">
                     V
                 </span>
@@ -77,24 +74,6 @@ export default function Navbar() {
                     "
                 >
                     My Dashboard
-                </Link>
-
-                <Link
-                    href="/analyze"
-                    className="
-                    px-5
-                    py-2
-                    rounded-xl
-                    bg-gradient-to-r
-                    from-blue-500
-                    to-purple-600
-                    text-white
-                    hover:scale-105
-                    transition
-                    shadow-[0_0_30px_rgba(139,92,246,.35)]
-                    "
-                >
-                    Analyze Now
                 </Link>
             </div>
         </nav>
