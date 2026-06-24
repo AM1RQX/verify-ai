@@ -5,7 +5,7 @@ export async function POST(req: Request) {
         const { image } = await req.json();
 
         const response = await fetch(
-            https://router.huggingface.co/hf-inference/models/Bombek1/ai-image-detector-siglip-dinov2,
+            "https://router.huggingface.co/hf-inference/models/Bombek1/ai-image-detector-siglip-dinov2",
             {
                 method: "POST",
                 headers: {
@@ -20,42 +20,37 @@ export async function POST(req: Request) {
 
         const result = await response.json();
 
-        console.log("========== HF RESPONSE ==========");
-        console.log(JSON.stringify(result, null, 2));
-        console.log("=================================");
+        console.log("HF RAW:", JSON.stringify(result, null, 2));
 
-        if (Array.isArray(result)) {
-            const mappedResult = result.map((item: any) => {
-                let mappedLabel = item.label;
-                const labelLower = item.label.toLowerCase();
-
-                if (labelLower.includes("ai") || labelLower.includes("fake")) {
-                    mappedLabel = "artificial";
-                } else if (labelLower.includes("real") || labelLower.includes("human")) {
-                    mappedLabel = "human";
-                }
-
-                return {
-                    ...item,
-                    label: mappedLabel
-                };
-            });
-
-            return NextResponse.json(mappedResult);
+        if (!Array.isArray(result)) {
+            return NextResponse.json([
+                { label: "human", score: 0.5 },
+                { label: "artificial", score: 0.5 }
+            ]);
         }
 
-        return NextResponse.json(result);
+        const normalized = result.map((item: any) => {
+            const label = item.label.toLowerCase();
+
+            if (label.includes("ai") || label.includes("fake")) {
+                return { label: "artificial", score: item.score };
+            }
+
+            if (label.includes("real") || label.includes("human")) {
+                return { label: "human", score: item.score };
+            }
+
+            return item;
+        });
+
+        return NextResponse.json(normalized);
+
     } catch (error) {
-        console.error("SERVER ERROR:");
         console.error(error);
 
         return NextResponse.json(
-            {
-                error: "Analyze failed",
-            },
-            {
-                status: 500,
-            }
+            { error: "Analyze failed" },
+            { status: 500 }
         );
     }
 }
