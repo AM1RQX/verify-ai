@@ -21,6 +21,7 @@ export async function POST(req: Request) {
         );
 
         const result = await response.json();
+        console.log(JSON.stringify(result, null, 2));
 
         console.log("SIGHTENGINE:", result);
 
