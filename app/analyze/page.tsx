@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+/*import { supabase } from "@/lib/supabase";*/
 
 type AnalysisItem = {
     created_at: string;
@@ -11,7 +11,7 @@ type AnalysisItem = {
 };
 
 export default function AnalyzePage() {
-    const [user, setUser] = useState<any>(null);
+    /*const [user, setUser] = useState<any>(null);*/
     const [image, setImage] = useState<string | null>(null);
     const [base64, setBase64] = useState("");
     const [loading, setLoading] = useState(false);
@@ -23,57 +23,57 @@ export default function AnalyzePage() {
     const [history, setHistory] = useState<AnalysisItem[]>([]);
     const [analysesToday, setAnalysesToday] = useState(0);
 
-    useEffect(() => {
-        async function loadData() {
-            const {
-                data: { user },
-            } = await supabase.auth.getUser();
-
-            if (!user) {
-                return;
-            }
-            setUser(user);
-
-            // Fetch history
-            const { data: analyses } = await supabase
-                .from("analyses")
-                .select("ai_probability, human_probability, created_at")
-                .eq("user_id", user.id)
-                .order("created_at", { ascending: false })
-                .limit(10);
-
-            if (analyses) {
-                setHistory(analyses);
-            }
-
-            // Fetch usage limits
-            const today = new Date().toISOString().split("T")[0];
-            const { data: usageData } = await supabase
-                .from("usage_limits")
-                .select("*")
-                .eq("user_id", user.id)
-                .single();
-
-            if (usageData) {
-                if (usageData.last_reset !== today) {
-                    await supabase
-                        .from("usage_limits")
-                        .update({ scans_today: 0, last_reset: today })
-                        .eq("user_id", user.id);
-                    setAnalysesToday(0);
-                } else {
-                    setAnalysesToday(usageData.scans_today);
-                }
-            } else {
-                await supabase
-                    .from("usage_limits")
-                    .insert({ user_id: user.id, scans_today: 0, last_reset: today });
-                setAnalysesToday(0);
-            }
-        }
-
-        loadData();
-    }, []);
+    /* useEffect(() => {
+         async function loadData() {
+             const {
+                 data: { user },
+             } = await supabase.auth.getUser();
+ 
+             if (!user) {
+                 return;
+             }
+             setUser(user);
+ 
+             // Fetch history
+             const { data: analyses } = await supabase
+                 .from("analyses")
+                 .select("ai_probability, human_probability, created_at")
+                 .eq("user_id", user.id)
+                 .order("created_at", { ascending: false })
+                 .limit(10);
+ 
+             if (analyses) {
+                 setHistory(analyses);
+             }
+ 
+             // Fetch usage limits
+             const today = new Date().toISOString().split("T")[0];
+             const { data: usageData } = await supabase
+                 .from("usage_limits")
+                 .select("*")
+                 .eq("user_id", user.id)
+                 .single();
+ 
+             if (usageData) {
+                 if (usageData.last_reset !== today) {
+                     await supabase
+                         .from("usage_limits")
+                         .update({ scans_today: 0, last_reset: today })
+                         .eq("user_id", user.id);
+                     setAnalysesToday(0);
+                 } else {
+                     setAnalysesToday(usageData.scans_today);
+                 }
+             } else {
+                 await supabase
+                     .from("usage_limits")
+                     .insert({ user_id: user.id, scans_today: 0, last_reset: today });
+                 setAnalysesToday(0);
+             }
+         }
+ 
+         loadData();
+     }, []);*/
 
     function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
@@ -90,14 +90,8 @@ export default function AnalyzePage() {
     }
 
     async function handleAnalyze() {
-        if (!user) {
-            alert("Please sign in to analyze images");
-            return;
-        }
-        if (analysesToday >= 100) {
-            alert("You reached the daily limit (100 analyses)");
-            return;
-        }
+
+
         if (!base64) {
             alert("Please upload an image first");
             return;
@@ -147,7 +141,7 @@ export default function AnalyzePage() {
             setHumanProbability(human);
             setConfidence(Math.max(ai, human));
 
-            const { data: newAnalysis } = await supabase
+            /*const { data: newAnalysis } = await supabase
                 .from("analyses")
                 .insert({
                     user_id: user.id,
@@ -159,15 +153,15 @@ export default function AnalyzePage() {
 
             if (newAnalysis) {
                 setHistory((prev) => [newAnalysis, ...prev].slice(0, 10));
-            }
+            }*/
 
-            const newCount = analysesToday + 1;
+            /*const newCount = analysesToday + 1;
             setAnalysesToday(newCount);
 
             await supabase
                 .from("usage_limits")
                 .update({ scans_today: newCount })
-                .eq("user_id", user.id);
+                .eq("user_id", user.id);*/
 
         } catch (error: any) {
             console.error("ANALYZE ERROR:", error);
@@ -196,7 +190,7 @@ export default function AnalyzePage() {
                     </Link>
                     <div className="flex items-center gap-4">
                         <div className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-zinc-400">
-                            {analysesToday} / 100 Scans Today
+                            Unlimited Scans
                         </div>
                     </div>
                 </div>
@@ -241,7 +235,7 @@ export default function AnalyzePage() {
 
                         <button
                             onClick={handleAnalyze}
-                            disabled={loading || !image || !user}
+                            disabled={loading || !image}
                             className="w-full relative group overflow-hidden py-4 rounded-2xl bg-indigo-600 font-semibold text-white shadow-2xl shadow-indigo-500/20 hover:bg-indigo-500 transition-all disabled:opacity-50 disabled:hover:bg-indigo-600 active:scale-[0.98]"
                         >
                             <span className="relative z-10 flex items-center justify-center gap-2">
