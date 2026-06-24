@@ -113,7 +113,7 @@ export default function AnalyzePage() {
             alert("Please sign in to analyze images");
             return;
         }
-        if (analysesToday >= 10) {
+        if (analysesToday >= 100) {
             alert("You reached the daily limit (10 analyses)");
             return;
         }
@@ -262,14 +262,14 @@ export default function AnalyzePage() {
 
                         <button
                             onClick={handleAnalyze}
-                            disabled={loading || analysesToday >= 10 || !user}
+                            disabled={loading || analysesToday >= 100 || !user}
                             className="mt-6 w-full py-4 rounded-2xl bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 font-semibold hover:scale-[1.02] transition disabled:opacity-50"
                         >
                             {loading
                                 ? "Analyzing..."
                                 : !user
                                     ? "Sign In to Analyze"
-                                    : analysesToday >= 10
+                                    : analysesToday >= 100
                                         ? "Daily Limit Reached"
                                         : "Analyze Image"}
                         </button>
