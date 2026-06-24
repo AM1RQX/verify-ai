@@ -176,10 +176,29 @@ export default function Dashboard() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                             </svg>
                         </div>
-                        <h2 className="text-3xl font-bold text-zinc-400 tracking-tight">Advanced Stats</h2>
-                        <p className="mt-3 text-zinc-600 font-medium max-w-sm">
-                            Detailed breakdown of your detection trends and history coming soon.
+
+                        <h2 className="text-3xl font-bold text-white tracking-tight">
+                            Detection Summary
+                        </h2>
+
+                        <p className="mt-3 text-zinc-400 font-medium max-w-sm">
+                            Overview of your image analysis activity.
                         </p>
+
+                        <div className="mt-6 space-y-3">
+                            <div className="flex justify-between">
+                                <span className="text-zinc-500">Total Analyses</span>
+                                <span className="font-bold text-white">{totalScans}</span>
+                            </div>
+
+                            <div className="flex justify-between">
+                                <span className="text-zinc-500">Daily Limit</span>
+                                <span className="font-bold text-indigo-400">
+                                    0/100
+                                </span>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 

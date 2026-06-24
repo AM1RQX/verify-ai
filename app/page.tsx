@@ -73,7 +73,7 @@ export default function Home() {
         />
 
         {/* Subtle vertical beam for depth */}
-        <div className="absolute left-1/2 top-0 bottom-0 w-[1px] bg-gradient-to-b from-transparent via-white/5 to-transparent" />
+
       </div>
 
       {/* PAGE CONTENT */}
