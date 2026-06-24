@@ -29,8 +29,6 @@ export default function AnalyzePage() {
                 data: { user },
             } = await supabase.auth.getUser();
 
-            console.log("CURRENT USER:", user);
-
             if (!user) {
                 return;
             }
@@ -79,32 +77,15 @@ export default function AnalyzePage() {
 
     function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
-
-        console.log("FILE:", file);
-
-        if (!file) {
-            alert("Файл не найден");
-            return;
-        }
+        if (!file) return;
 
         const imageUrl = URL.createObjectURL(file);
-
-        console.log("IMAGE URL:", imageUrl);
-
         setImage(imageUrl);
 
         const reader = new FileReader();
-
         reader.onload = () => {
-            console.log("BASE64 READY");
-
             setBase64(reader.result as string);
         };
-
-        reader.onerror = () => {
-            console.log("FILE READER ERROR");
-        };
-
         reader.readAsDataURL(file);
     }
 
@@ -114,11 +95,11 @@ export default function AnalyzePage() {
             return;
         }
         if (analysesToday >= 100) {
-            alert("You reached the daily limit (10 analyses)");
+            alert("You reached the daily limit (100 analyses)");
             return;
         }
         if (!base64) {
-            alert("Сначала загрузите изображение");
+            alert("Please upload an image first");
             return;
         }
 
@@ -127,19 +108,11 @@ export default function AnalyzePage() {
 
             const response = await fetch("/api/analyze", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    image: base64,
-                }),
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ image: base64 }),
             });
 
             const result = await response.json();
-            console.log("HF RAW RESPONSE:");
-            console.log(JSON.stringify(result, null, 2));
-
-            console.log("HF RESULT:", result);
 
             let ai = 0;
             let human = 0;
@@ -158,17 +131,13 @@ export default function AnalyzePage() {
 
                 ai = Math.round((aiItem?.score || 0) * 100);
                 human = Math.round((humanItem?.score || 0) * 100);
-
-                console.log("AI ITEM:", aiItem);
-                console.log("HUMAN ITEM:", humanItem);
             }
 
             setAiProbability(ai);
             setHumanProbability(human);
             setConfidence(Math.max(ai, human));
 
-            // Save to Supabase
-            const { data: newAnalysis, error: analysisError } = await supabase
+            const { data: newAnalysis } = await supabase
                 .from("analyses")
                 .insert({
                     user_id: user.id,
@@ -178,11 +147,6 @@ export default function AnalyzePage() {
                 .select()
                 .single();
 
-            console.log("ANALYSIS INSERT:", {
-                newAnalysis,
-                analysisError,
-            });
-
             if (newAnalysis) {
                 setHistory((prev) => [newAnalysis, ...prev].slice(0, 10));
             }
@@ -190,169 +154,180 @@ export default function AnalyzePage() {
             const newCount = analysesToday + 1;
             setAnalysesToday(newCount);
 
-            const { error: usageError } = await supabase
+            await supabase
                 .from("usage_limits")
                 .update({ scans_today: newCount })
                 .eq("user_id", user.id);
 
-            console.log("USAGE UPDATE:", {
-                usageError,
-            });
-
         } catch (error: any) {
             console.error("ANALYZE ERROR:", error);
-
-            if (error?.message) {
-                alert(error.message);
-            } else {
-                alert(JSON.stringify(error));
-            }
+            alert(error?.message || "An error occurred during analysis");
         } finally {
             setLoading(false);
         }
     }
 
     return (
-        <main className="relative min-h-screen overflow-hidden bg-[#04050b] text-white">
-            <Link
-                href="/"
-                className="
-    fixed
-    top-8
-    left-8
-    z-50
-    text-6xl
-    font-bold
-    text-purple-500
-    hover:scale-110
-    transition
-    "
-            >
-                V
-            </Link>
-            <div className="absolute inset-0">
-                <div className="absolute -top-40 -left-40 h-[700px] w-[700px] rounded-full bg-purple-600/20 blur-[180px] animate-pulse" />
-
-                <div className="absolute -bottom-40 -right-40 h-[700px] w-[700px] rounded-full bg-blue-600/20 blur-[180px] animate-pulse" />
-
-                <div className="absolute left-1/2 top-1/2 h-[500px] w-[500px] rounded-full bg-fuchsia-600/10 blur-[140px] -translate-x-1/2 -translate-y-1/2" />
+        <main className="min-h-screen bg-[#030303] text-zinc-100 selection:bg-indigo-500/30">
+            {/* Background Aesthetic Elements */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute -top-[10%] left-[20%] w-[70%] h-[50%] bg-indigo-500/10 blur-[120px] rounded-full" />
+                <div className="absolute top-[20%] -right-[10%] w-[50%] h-[50%] bg-purple-500/10 blur-[120px] rounded-full" />
             </div>
 
-            <div className="relative z-10 max-w-7xl mx-auto p-8">
-                <div className="mb-10">
-                    <h1 className="text-6xl font-bold">Analyze Image</h1>
+            {/* Navigation Header */}
+            <nav className="relative z-20 border-b border-white/5 bg-black/20 backdrop-blur-md">
+                <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+                    <Link href="/" className="flex items-center gap-2 group">
+                        <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
+                            V
+                        </div>
+                        <span className="font-semibold tracking-tight text-lg">VerifyAI</span>
+                    </Link>
+                    <div className="flex items-center gap-4">
+                        <div className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-zinc-400">
+                            {analysesToday} / 100 Scans Today
+                        </div>
+                    </div>
+                </div>
+            </nav>
 
-                    <p className="mt-3 text-white/50">
-                        Upload an image and detect AI-generated content instantly.
+            <div className="relative z-10 max-w-7xl mx-auto px-6 py-12">
+                {/* Hero Title Section */}
+                <div className="mb-12">
+                    <h1 className="text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-b from-white to-zinc-400 bg-clip-text text-transparent">
+                        Analysis Engine
+                    </h1>
+                    <p className="mt-3 text-lg text-zinc-400 max-w-2xl">
+                        Deep-scan visual assets to distinguish between organic human creation and synthetic AI generation.
                     </p>
                 </div>
 
-                <div className="grid lg:grid-cols-2 gap-8">
-                    <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-8">
-                        <h2 className="text-2xl font-bold mb-6">Upload Image</h2>
-
-                        <label className="flex flex-col items-center justify-center h-[350px] rounded-3xl border-2 border-dashed border-purple-500/30 bg-white/[0.02] cursor-pointer hover:border-purple-500 transition">
-                            <span className="text-6xl mb-4">📤</span>
-
-                            <span className="text-xl">Drag & Drop Image</span>
-
-                            <span className="text-white/50 mt-2">PNG, JPG, WEBP</span>
-
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={handleImageUpload}
-                                className="hidden"
-                            />
-                        </label>
+                <div className="grid lg:grid-cols-12 gap-8">
+                    {/* Left Column: Upload & Controls */}
+                    <div className="lg:col-span-7 space-y-6">
+                        <div className="group relative rounded-3xl border border-white/10 bg-zinc-900/50 p-2 backdrop-blur-xl transition-all hover:border-indigo-500/30">
+                            <label className="relative flex flex-col items-center justify-center min-h-[400px] rounded-[22px] border border-dashed border-white/10 bg-zinc-900/30 hover:bg-zinc-800/40 transition-colors cursor-pointer group">
+                                {image ? (
+                                    <img
+                                        src={image}
+                                        alt="Upload preview"
+                                        className="absolute inset-0 w-full h-full object-contain p-4 rounded-3xl"
+                                    />
+                                ) : (
+                                    <div className="text-center p-8">
+                                        <div className="mx-auto w-16 h-16 mb-6 rounded-2xl bg-zinc-800 flex items-center justify-center border border-white/5 group-hover:scale-110 transition-transform">
+                                            <svg className="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                            </svg>
+                                        </div>
+                                        <h3 className="text-xl font-semibold mb-2 text-zinc-200">Drop your image here</h3>
+                                        <p className="text-zinc-500 text-sm">Supports PNG, JPG and WebP up to 10MB</p>
+                                    </div>
+                                )}
+                                <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                            </label>
+                        </div>
 
                         <button
                             onClick={handleAnalyze}
-                            disabled={loading || analysesToday >= 100 || !user}
-                            className="mt-6 w-full py-4 rounded-2xl bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 font-semibold hover:scale-[1.02] transition disabled:opacity-50"
+                            disabled={loading || !image || !user}
+                            className="w-full relative group overflow-hidden py-4 rounded-2xl bg-indigo-600 font-semibold text-white shadow-2xl shadow-indigo-500/20 hover:bg-indigo-500 transition-all disabled:opacity-50 disabled:hover:bg-indigo-600 active:scale-[0.98]"
                         >
-                            {loading
-                                ? "Analyzing..."
-                                : !user
-                                    ? "Sign In to Analyze"
-                                    : analysesToday >= 100
-                                        ? "Daily Limit Reached"
-                                        : "Analyze Image"}
+                            <span className="relative z-10 flex items-center justify-center gap-2">
+                                {loading ? (
+                                    <>
+                                        <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                        </svg>
+                                        Processing...
+                                    </>
+                                ) : (
+                                    <>Run Analysis</>
+                                )}
+                            </span>
                         </button>
-                        <p className="mt-3 text-center text-white/60">
-                            {analysesToday}/100 analyses used today
-                        </p>
                     </div>
 
-                    <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-8">
-                        <h2 className="text-2xl font-bold mb-6">Preview</h2>
+                    {/* Right Column: Statistics & Real-time Results */}
+                    <div className="lg:col-span-5 space-y-6">
+                        <div className="rounded-3xl border border-white/10 bg-zinc-900/50 p-8 backdrop-blur-xl">
+                            <h2 className="text-sm font-bold uppercase tracking-widest text-indigo-400 mb-8">Live Result</h2>
 
-                        {image ? (
-                            <img
-                                src={image}
-                                alt="Preview"
-                                className="w-full h-[350px] object-contain rounded-3xl"
-                            />
-                        ) : (
-                            <div className="h-[350px] rounded-3xl bg-white/[0.03] flex items-center justify-center text-white/40">
-                                No image selected
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
+                            <div className="space-y-8">
+                                {/* Confidence Gauge */}
+                                <div>
+                                    <div className="flex items-end justify-between mb-4">
+                                        <div>
+                                            <p className="text-sm text-zinc-500 font-medium">Confidence Score</p>
+                                            <h3 className="text-5xl font-bold tracking-tighter">
+                                                {confidence !== null ? `${confidence}%` : "0%"}
+                                            </h3>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${(aiProbability ?? 0) > 50 ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20' : 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'}`}>
 
-            <div className="grid lg:grid-cols-3 gap-6 mt-8">
-                <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
-                    <div className="text-green-400 text-5xl font-bold">
-                        {confidence !== null ? `${confidence}%` : "--"}
-                    </div>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="h-3 w-full bg-zinc-800 rounded-full overflow-hidden border border-white/5 p-0.5">
+                                        <div
+                                            className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full transition-all duration-1000 ease-out"
+                                            style={{ width: `${confidence || 0}%` }}
+                                        />
+                                    </div>
+                                </div>
 
-                    <div className="text-white/50 mt-2">Confidence Score</div>
-                </div>
-
-                <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
-                    <div className="text-pink-400 text-5xl font-bold">
-                        {aiProbability !== null ? `${aiProbability}%` : "--"}
-                    </div>
-
-                    <div className="text-white/50 mt-2">AI Probability</div>
-                </div>
-
-                <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
-                    <div className="text-blue-400 text-5xl font-bold">
-                        {humanProbability !== null ? `${humanProbability}%` : "--"}
-                    </div>
-
-                    <div className="text-white/50 mt-2">Human Probability</div>
-                </div>
-            </div>
-
-            <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-8">
-                <h2 className="text-3xl font-bold mb-6">Recent Analyses</h2>
-
-                {history.length === 0 ? (
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-                        No analyses yet.
-                    </div>
-                ) : (
-                    <div className="space-y-3">
-                        {history.map((item, index) => (
-                            <div
-                                key={index}
-                                className="rounded-2xl border border-white/10 bg-white/[0.03] p-5"
-                            >
-                                <div className="font-semibold">AI: {item.ai_probability}%</div>
-
-                                <div className="text-white/60">Human: {item.human_probability}%</div>
-
-                                <div className="text-white/40 text-sm mt-2">
-                                    {new Date(item.created_at).toLocaleString()}
+                                {/* Probability Breakdown */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                                        <p className="text-xs text-zinc-500 font-medium mb-1">AI Probability</p>
+                                        <p className="text-2xl font-bold text-rose-400">{aiProbability !== null ? `${aiProbability}%` : "--"}</p>
+                                    </div>
+                                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                                        <p className="text-xs text-zinc-500 font-medium mb-1">Human Probability</p>
+                                        <p className="text-2xl font-bold text-emerald-400">{humanProbability !== null ? `${humanProbability}%` : "--"}</p>
+                                    </div>
                                 </div>
                             </div>
-                        ))}
+                        </div>
+
+                        {/* Recent Activity Feed */}
+                        <div className="rounded-3xl border border-white/10 bg-zinc-900/50 p-8 backdrop-blur-xl">
+                            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-500 mb-6">Recent Activity</h2>
+                            <div className="space-y-4">
+                                {history.length === 0 ? (
+                                    <div className="py-12 text-center border border-dashed border-white/5 rounded-2xl bg-white/[0.02]">
+                                        <p className="text-sm text-zinc-500">No recent scans available</p>
+                                    </div>
+                                ) : (
+                                    history.slice(0, 5).map((item, index) => (
+                                        <div key={index} className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/[0.07] transition-colors">
+                                            <div className="flex items-center gap-4">
+                                                <div className={`w-2 h-2 rounded-full ${item.ai_probability > 50 ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]' : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]'}`} />
+                                                <div>
+                                                    <p className="text-sm font-medium">AI: {item.ai_probability}% / Human: {item.human_probability}%</p>
+                                                    <p className="text-[10px] text-zinc-500 uppercase tracking-tight">
+                                                        {new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {new Date(item.created_at).toLocaleDateString()}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="text-zinc-600 group-hover:text-zinc-400">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                            {history.length > 0 && (
+                                <Link href="/dashboard" className="mt-6 block text-center text-xs font-semibold text-zinc-400 hover:text-white transition-colors">
+                                    View Full History →
+                                </Link>
+                            )}
+                        </div>
                     </div>
-                )}
+                </div>
             </div>
         </main>
     );
