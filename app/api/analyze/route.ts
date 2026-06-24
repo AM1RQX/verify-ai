@@ -20,14 +20,15 @@ export async function POST(req: Request) {
 
         const result = await response.json();
 
-        console.log("HF RESPONSE:");
-        console.log(result);
+        console.log("========== HF RESPONSE ==========");
+        console.log(JSON.stringify(result, null, 2));
+        console.log("=================================");
 
         if (Array.isArray(result)) {
             const mappedResult = result.map((item: any) => {
                 let mappedLabel = item.label;
                 const labelLower = item.label.toLowerCase();
-                
+
                 if (labelLower.includes("ai") || labelLower.includes("fake")) {
                     mappedLabel = "artificial";
                 } else if (labelLower.includes("real") || labelLower.includes("human")) {
@@ -39,7 +40,7 @@ export async function POST(req: Request) {
                     label: mappedLabel
                 };
             });
-            
+
             return NextResponse.json(mappedResult);
         }
 
