@@ -143,18 +143,21 @@ export default function AnalyzePage() {
             let human = 0;
 
             if (Array.isArray(result)) {
-                ai = Math.round(
-                    (result.find((item: any) => item.label === "artificial")?.score || 0) * 100
-                );
+                const aiScore =
+                    result.find((item: any) =>
+                        (item.label || "").toLowerCase().includes("ai") ||
+                        (item.label || "").toLowerCase().includes("fake") ||
+                        (item.label || "").toLowerCase().includes("artificial")
+                    )?.score || 0;
 
-                human = Math.round(
-                    (result.find((item: any) => item.label === "human")?.score || 0) * 100
-                );
-            } else {
-                const score = result?.[0]?.score || result?.score || 0.5;
+                const humanScore =
+                    result.find((item: any) =>
+                        (item.label || "").toLowerCase().includes("real") ||
+                        (item.label || "").toLowerCase().includes("human")
+                    )?.score || 0;
 
-                ai = Math.round(score * 100);
-                human = 100 - ai;
+                ai = Math.round(aiScore * 100);
+                human = Math.round(humanScore * 100);
             }
 
             setAiProbability(ai);
