@@ -5,56 +5,31 @@ export async function POST(req: Request) {
         const { image } = await req.json();
 
         const response = await fetch(
-            "https://router.huggingface.co/hf-inference/models/Organika/sdxl-detector",
+            "https://api.sightengine.com/1.0/check.json",
             {
                 method: "POST",
                 headers: {
-                    Authorization: `Bearer ${process.env.HUGGINGFACE_API_KEY}`,
-                    "Content-Type": "application/json",
+                    "Content-Type": "application/x-www-form-urlencoded",
                 },
-                body: JSON.stringify({
-                    inputs: image,
+                body: new URLSearchParams({
+                    media_base64: image,
+                    models: "genai",
+                    api_user: process.env.SIGHTENGINE_API_USER!,
+                    api_secret: process.env.SIGHTENGINE_API_SECRET!,
                 }),
             }
         );
-        if (!response.ok) {
-            const errorText = await response.text();
-
-            console.error("HF ERROR:", errorText);
-
-            return NextResponse.json(
-                { error: errorText },
-                { status: 500 }
-            );
-        }
 
         const result = await response.json();
 
-        console.log("RAW MODEL:", JSON.stringify(result, null, 2));
+        console.log("SIGHTENGINE:", result);
 
-        let ai = 0;
-        let human = 0;
+        const ai =
+            result?.type?.ai_generated ??
+            result?.ai_generated ??
+            0;
 
-        if (Array.isArray(result)) {
-            for (const item of result) {
-                const label = String(item.label || "").toLowerCase();
-
-                if (
-                    label.includes("ai") ||
-                    label.includes("fake") ||
-                    label.includes("artificial")
-                ) {
-                    ai = item.score;
-                }
-
-                if (
-                    label.includes("real") ||
-                    label.includes("human")
-                ) {
-                    human = item.score;
-                }
-            }
-        }
+        const human = 1 - ai;
 
         return NextResponse.json([
             {

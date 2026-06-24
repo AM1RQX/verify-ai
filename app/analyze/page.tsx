@@ -209,7 +209,7 @@ export default function AnalyzePage() {
                         Analysis Engine
                     </h1>
                     <p className="mt-3 text-lg text-zinc-400 max-w-2xl">
-                        Deep-scan visual assets to distinguish between organic human creation and synthetic AI generation.
+                        Results can be incorrect, should not be considered definitive proof.
                     </p>
                 </div>
 
