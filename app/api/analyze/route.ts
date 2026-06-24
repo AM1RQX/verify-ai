@@ -17,6 +17,16 @@ export async function POST(req: Request) {
                 }),
             }
         );
+        if (!response.ok) {
+            const errorText = await response.text();
+
+            console.error("HF ERROR:", errorText);
+
+            return NextResponse.json(
+                { error: errorText },
+                { status: 500 }
+            );
+        }
 
         const result = await response.json();
 

@@ -112,7 +112,17 @@ export default function AnalyzePage() {
                 body: JSON.stringify({ image: base64 }),
             });
 
-            const result = await response.json();
+            const text = await response.text();
+
+            console.log("API RAW:", text);
+
+            let result;
+
+            try {
+                result = JSON.parse(text);
+            } catch {
+                throw new Error(text);
+            }
 
             let ai = 0;
             let human = 0;
