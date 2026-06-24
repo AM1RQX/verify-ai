@@ -1,3 +1,4 @@
+"use client";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import DashboardPreview from "./components/DashboardPreview";
@@ -116,18 +117,7 @@ export default function Home() {
         <Footer />
       </div>
 
-      {/* Inline styles for custom animations if not defined in tailwind.config.js */}
-      <style jsx global>{`
-        @keyframes blob {
-          0% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(30px, -50px) scale(1.1); }
-          66% { transform: translate(-20px, 20px) scale(0.9); }
-          100% { transform: translate(0px, 0px) scale(1); }
-        }
-        .animate-blob {
-          animation: blob 7s infinite alternate;
-        }
-      `}</style>
+
     </main>
   );
 }
