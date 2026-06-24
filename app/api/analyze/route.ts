@@ -4,26 +4,24 @@ export async function POST(req: Request) {
     try {
         const { image } = await req.json();
 
+        const formData = new FormData();
+
+        formData.append("media_base64", image);
+        formData.append("models", "genai");
+        formData.append("api_user", process.env.SIGHTENGINE_API_USER!);
+        formData.append("api_secret", process.env.SIGHTENGINE_API_SECRET!);
+
         const response = await fetch(
             "https://api.sightengine.com/1.0/check.json",
             {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: new URLSearchParams({
-                    media_base64: image,
-                    models: "genai",
-                    api_user: process.env.SIGHTENGINE_API_USER!,
-                    api_secret: process.env.SIGHTENGINE_API_SECRET!,
-                }),
+                body: formData,
             }
         );
 
         const result = await response.json();
-        console.log(JSON.stringify(result, null, 2));
 
-        console.log("SIGHTENGINE:", result);
+        console.log("SIGHTENGINE:", JSON.stringify(result, null, 2));
 
         const ai =
             result?.type?.ai_generated ??
