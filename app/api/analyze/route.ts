@@ -5,7 +5,7 @@ export async function POST(req: Request) {
         const { image } = await req.json();
 
         const response = await fetch(
-            "https://router.huggingface.co/hf-inference/models/Nahrawy/AIorNot",
+            "https://router.huggingface.co/hf-inference/models/Organika/sdxl-detector",
             {
                 method: "POST",
                 headers: {
