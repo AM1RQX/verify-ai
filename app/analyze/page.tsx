@@ -136,6 +136,8 @@ export default function AnalyzePage() {
             });
 
             const result = await response.json();
+            console.log("HF RAW RESPONSE:");
+            console.log(JSON.stringify(result, null, 2));
 
             console.log("HF RESULT:", result);
 
@@ -143,21 +145,22 @@ export default function AnalyzePage() {
             let human = 0;
 
             if (Array.isArray(result)) {
-                const aiScore =
-                    result.find((item: any) =>
-                        (item.label || "").toLowerCase().includes("ai") ||
-                        (item.label || "").toLowerCase().includes("fake") ||
-                        (item.label || "").toLowerCase().includes("artificial")
-                    )?.score || 0;
+                const aiItem = result.find((item: any) =>
+                    (item.label || "").toLowerCase().includes("artificial") ||
+                    (item.label || "").toLowerCase().includes("ai") ||
+                    (item.label || "").toLowerCase().includes("fake")
+                );
 
-                const humanScore =
-                    result.find((item: any) =>
-                        (item.label || "").toLowerCase().includes("real") ||
-                        (item.label || "").toLowerCase().includes("human")
-                    )?.score || 0;
+                const humanItem = result.find((item: any) =>
+                    (item.label || "").toLowerCase().includes("human") ||
+                    (item.label || "").toLowerCase().includes("real")
+                );
 
-                ai = Math.round(aiScore * 100);
-                human = Math.round(humanScore * 100);
+                ai = Math.round((aiItem?.score || 0) * 100);
+                human = Math.round((humanItem?.score || 0) * 100);
+
+                console.log("AI ITEM:", aiItem);
+                console.log("HUMAN ITEM:", humanItem);
             }
 
             setAiProbability(ai);
@@ -277,7 +280,7 @@ export default function AnalyzePage() {
                                         : "Analyze Image"}
                         </button>
                         <p className="mt-3 text-center text-white/60">
-                            {analysesToday}/10 analyses used today
+                            {analysesToday}/100 analyses used today
                         </p>
                     </div>
 
