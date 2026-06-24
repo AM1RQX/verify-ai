@@ -4,9 +4,18 @@ export async function POST(req: Request) {
     try {
         const { image } = await req.json();
 
+        const base64Data = image.split(",")[1];
+
+        const buffer = Buffer.from(base64Data, "base64");
+
         const formData = new FormData();
 
-        formData.append("media_base64", image);
+        formData.append(
+            "media",
+            new Blob([buffer], { type: "image/jpeg" }),
+            "image.jpg"
+        );
+
         formData.append("models", "genai");
         formData.append("api_user", process.env.SIGHTENGINE_API_USER!);
         formData.append("api_secret", process.env.SIGHTENGINE_API_SECRET!);
@@ -21,11 +30,12 @@ export async function POST(req: Request) {
 
         const result = await response.json();
 
-        console.log("SIGHTENGINE:", JSON.stringify(result, null, 2));
+        console.log("SIGHTENGINE RESULT:", result);
 
         const ai =
             result?.type?.ai_generated ??
             result?.ai_generated ??
+            result?.genai ??
             0;
 
         const human = 1 - ai;
