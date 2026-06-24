@@ -7,9 +7,12 @@ export default function ForgotPassword() {
     const [email, setEmail] = useState("");
     const [success, setSuccess] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [errorMsg, setErrorMsg] = useState("");
 
     async function handleReset() {
         setLoading(true);
+        setErrorMsg("");
+        setSuccess(false);
 
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
             redirectTo: "https://verify-ai-silk.vercel.app/reset-password",
@@ -18,7 +21,7 @@ export default function ForgotPassword() {
         setLoading(false);
 
         if (error) {
-            console.error(error.message);
+            setErrorMsg(error.message);
         } else {
             setSuccess(true);
         }
@@ -54,6 +57,11 @@ export default function ForgotPassword() {
                 >
                     {loading ? "Sending..." : "Send Reset Link"}
                 </button>
+                {success && (
+                    <p className="mt-4 text-green-400 text-sm text-center">
+                        Check your email. Password reset link has been sent.
+                    </p>
+                )}
             </div>
         </main>
     );
