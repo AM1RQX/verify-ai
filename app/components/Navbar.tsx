@@ -35,26 +35,32 @@ export default function Navbar() {
             </Link>
 
             {/* Menu */}
-            <div className="hidden md:flex gap-10 text-white/70">
-                <Link href="/dashboard" className="hover:text-purple-400 transition">
-                    Dashboard
-                </Link>
+            <div className="hidden md:flex items-center gap-14 text-xl text-white/70">
 
-                <Link href="/analyze" className="hover:text-purple-400 transition">
-                    Analyze
-                </Link>
+                <a href="#product" className="hover:text-white transition">
+                    Product
+                </a>
 
-                <Link href="/analyze" className="hover:text-purple-400 transition">
-                    AI Images
-                </Link>
+                <a href="#features" className="hover:text-white transition">
+                    Features
+                </a>
 
-                <a href="#pricing" className="hover:text-purple-400 transition">
+                <a href="#how-it-works" className="hover:text-white transition">
+                    How It Works
+                </a>
+
+                <a href="#pricing" className="hover:text-white transition">
                     Pricing
                 </a>
 
-                <a href="#faq" className="hover:text-purple-400 transition">
+                <a href="#reviews" className="hover:text-white transition">
+                    Reviews
+                </a>
+
+                <a href="#faq" className="hover:text-white transition">
                     FAQ
                 </a>
+
             </div>
 
             {/* Right Side */}

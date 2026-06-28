@@ -137,7 +137,6 @@ export default function FAQ() {
     transition
     "
                 >
-                    {user ? "My Dashboard" : "Get Started Free"}
                 </a>
 
             </div>

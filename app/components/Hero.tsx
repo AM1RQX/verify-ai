@@ -77,7 +77,7 @@ export default function Hero() {
                         </span>
 
                         <span className="px-4 py-2 rounded-full bg-yellow-500/20 text-yellow-300 text-sm border border-yellow-500/20">
-                            Demo Version • 10 analyses/day
+                            Demo Version • 15 analyses/day
                         </span>
 
                     </div>
